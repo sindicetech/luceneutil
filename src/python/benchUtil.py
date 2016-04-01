@@ -916,8 +916,6 @@ class RunAlgs:
     command.append('-classpath')
     command.append(cp)
     command.append('perf.SearchPerfTest')
-    command.append('-codec')
-    command.append(c.index.codecName)
     command.append('-dirImpl')
     command.append(c.directory)
     command.append('-indexPath')
