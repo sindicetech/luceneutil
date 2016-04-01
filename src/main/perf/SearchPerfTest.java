@@ -44,7 +44,6 @@ import org.apache.lucene.analysis.util.CharArraySet;
 import org.apache.lucene.codecs.Codec;
 import org.apache.lucene.codecs.PostingsFormat;
 import org.apache.lucene.codecs.lucene60.Lucene60Codec;
-import org.apache.lucene.codecs.encrypted.DummyEncryptedLucene60Codec;
 import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.facet.taxonomy.TaxonomyReader;
 import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyReader;
@@ -271,7 +270,6 @@ public class SearchPerfTest {
       final boolean verbose = args.getFlag("-verbose");
       final boolean cloneDocs = args.getFlag("-cloneDocs");
       final Mode mode = Mode.valueOf(args.getString("-mode", "update").toUpperCase(Locale.ROOT));
-      final String codecName = args.getString("-codec");
 
       final long reopenEveryMS = (long) (1000 * reopenEverySec);
 
@@ -308,14 +306,13 @@ public class SearchPerfTest {
       //((TieredMergePolicy) iwc.getMergePolicy()).setReclaimDeletesWeight(3.0);
       //((TieredMergePolicy) iwc.getMergePolicy()).setMaxMergeAtOnce(4);
 
-      Codec codec;
-      if (codecName.equals("encrypted")) {
-        codec = new DummyEncryptedLucene60Codec();
-      }
-      else {
-        codec = new Lucene60Codec();
-      }
-
+      final Codec codec = new Lucene60Codec() {
+          @Override
+          public PostingsFormat getPostingsFormatForField(String field) {
+            return PostingsFormat.forName(field.equals("id") ?
+                                          idFieldPostingsFormat : defaultPostingsFormat);
+          }
+        };
       iwc.setCodec(codec);
 
       final ConcurrentMergeScheduler cms = (ConcurrentMergeScheduler) iwc.getMergeScheduler();
