@@ -27,6 +27,7 @@ import org.apache.lucene.codecs.Codec;
 import org.apache.lucene.codecs.DocValuesFormat;
 import org.apache.lucene.codecs.PostingsFormat;
 import org.apache.lucene.codecs.lucene60.Lucene60Codec;
+import org.apache.lucene.codecs.encrypted.DummyEncryptedLucene60Codec;
 import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.facet.taxonomy.TaxonomyWriter;
 import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyWriter;
@@ -144,6 +145,7 @@ public final class Indexer {
     } else {
       randomDocIDMax = -1;
     }
+    final String codecName = args.getString("-codec");
     final String idFieldPostingsFormat = args.getString("-idFieldPostingsFormat");
     final boolean addGroupingFields = args.getFlag("-grouping");
     final boolean useCFS = args.getFlag("-cfs");
@@ -282,33 +284,14 @@ public final class Indexer {
     if (doDeletions || doForceMerge) {
       iwc.setIndexDeletionPolicy(NoDeletionPolicy.INSTANCE);
     }
-    
-    final Codec codec = new Lucene60Codec() {
-        @Override
-        public PostingsFormat getPostingsFormatForField(String field) {
-          return PostingsFormat.forName(field.equals("id") ?
-                                        idFieldPostingsFormat : defaultPostingsFormat);
-        }
 
-        private final DocValuesFormat facetsDVFormat = DocValuesFormat.forName(facetDVFormatName);
-        //private final DocValuesFormat lucene42DVFormat = DocValuesFormat.forName("Lucene42");
-        //private final DocValuesFormat diskDVFormat = DocValuesFormat.forName("Disk");
-//        private final DocValuesFormat lucene45DVFormat = DocValuesFormat.forName("Lucene45");
-        private final DocValuesFormat directDVFormat = DocValuesFormat.forName("Direct");
-
-        @Override
-        public DocValuesFormat getDocValuesFormatForField(String field) {
-          if (facetFields.contains(field) || field.equals("$facets")) {
-            return facetsDVFormat;
-            //} else if (field.equals("$facets_sorted_doc_values")) {
-            //return diskDVFormat;
-          } else {
-            // Use default DVFormat for all else:
-            // System.out.println("DV: field=" + field + " format=" + super.getDocValuesFormatForField(field));
-            return super.getDocValuesFormatForField(field);
-          }
-        }
-      };
+    Codec codec;
+    if (codecName.equals("encrypted")) {
+      codec = new DummyEncryptedLucene60Codec();
+    }
+    else {
+      codec = new Lucene60Codec();
+    }
 
     iwc.setCodec(codec);
 

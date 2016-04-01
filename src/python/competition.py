@@ -79,6 +79,7 @@ def sourceData(key=None):
 class Index(object):
 
   def __init__(self, checkout, dataSource,
+               codecName = constants.CODEC_DEFAULT,
                analyzer = constants.ANALYZER_DEFAULT,
                postingsFormat = constants.POSTINGS_FORMAT_DEFAULT,
                idFieldPostingsFormat = constants.ID_FIELD_POSTINGS_FORMAT_DEFAULT,
@@ -108,6 +109,7 @@ class Index(object):
                ):
     self.checkout = checkout
     self.dataSource = dataSource
+    self.codecName = codecName
     self.analyzer = analyzer
     self.postingsFormat = postingsFormat
     self.numThreads = numThreads
